@@ -1,4 +1,5 @@
 const axios = require('axios');
+const redisClient = require('../app'); // Adjust path as needed
 
 // URLs of the data sources
 const dataSourceUrls = [
@@ -6,6 +7,8 @@ const dataSourceUrls = [
     'https://5f2be0b4ffc88500167b85a0.mockapi.io/suppliers/patagonia',
     'https://5f2be0b4ffc88500167b85a0.mockapi.io/suppliers/paperflies'
 ];
+
+const ttlInSeconds = 1800;
 
 async function fetchData(url) {
     try {
@@ -28,9 +31,45 @@ async function fetchAllDataConcurrently() {
     }
 }
 
+async function storeDataInRedis(data, batchSize, ttlInSeconds) {
+    try {
+        const pipeline = redisClient.pipeline();
+        let count = 0;
+
+        for (const hotel of data) {
+            const destination = hotel.destination_id;
+            const hotelId = hotel.id;
+            const hotelJson = JSON.stringify(hotel);
+
+
+            console.log("hotelJson !", hotelJson)
+
+            pipeline.sadd(destination, hotelId);
+            pipeline.hmset(hotelId, 'hotelData', hotelJson);
+
+            pipeline.expire(destination, ttlInSeconds);
+            pipeline.expire(hotelId, ttlInSeconds);
+
+            count++;
+
+            if (count % batchSize === 0) {
+                await pipeline.exec();
+                pipeline.clear(); 
+            }
+        }
+        
+        if (count % batchSize !== 0) {
+            await pipeline.exec();
+        }
+
+        console.log('Data stored in Redis successfully');
+    } catch (error) {
+        console.error('Error storing data in Redis:', error);
+    }
+}
+
 function mergeSources(sources) {
     let mergedData = {};
-
     sources.forEach(source => {
         source.forEach(hotel => {
             const id = hotel.id || hotel.Id || hotel.hotel_id;
@@ -79,7 +118,7 @@ async function fetchDataAndMerge() {
 
             console.log("hotel id", mergedData[2].id)
             console.log("destinationImages", mergedData[2].images)
-
+            await storeDataInRedis(mergedData);
             return mergedData;
         } else {
             console.error('Error fetching or merging data.');
@@ -155,14 +194,15 @@ function createAmenitiesObject(amenitiesArray) {
 }
 
 function handleBookingCondition(data1, data2) {
-    const bookingCondition1 = data1?.booking_conditions;
-    const bookingCondition2 = data2?.booking_conditions;
+    const bookingCondition1 = data1?.booking_conditions || [];
+    const bookingCondition2 = data2?.booking_conditions || [];
 
 
     // console.log("bookingCondition1", bookingCondition1)
     // console.log("bookingCondition2", bookingCondition2)
-    return (bookingCondition1?.length || 0) > (bookingCondition2?.length || 0) ? bookingCondition1 : bookingCondition2 || [];
-}
+    const returnArray = (bookingCondition1.length > bookingCondition2.length) ? bookingCondition1 : bookingCondition2;
+    const trimmedArray = returnArray.map(condition => condition.trim());
+    return trimmedArray;}
 
 function handleImages(data1, data2) {
     const sourceImages = data1?.images || {};
