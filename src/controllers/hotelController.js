@@ -27,7 +27,6 @@ const listHotels = async (req, res) => {
         }
 
         const hotelData = await Promise.all(promises)
-        console.log("hotelData", hotelData)
         const filteredHotelData = hotelData.filter(data => data !== null);
         res.json(filteredHotelData)
     } catch (e) {

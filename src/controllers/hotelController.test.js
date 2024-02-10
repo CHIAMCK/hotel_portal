@@ -26,11 +26,11 @@ describe('listHotels', () => {
     });
 
     test('should fetch and return hotel data based on destination', async () => {
-        const destination = 'destination1';
+        const destinationId = 'destination1';
         const hotelIds = ['hotelId1', 'hotelId2'];
 
-        mockReq.query.destination = destination;
-        mockRedisClient.smembers.mockImplementation((destination, callback) => {
+        mockReq.query.destinationId = destinationId;
+        mockRedisClient.smembers.mockImplementation((destinationId, callback) => {
             callback(null, hotelIds);
         });
 
@@ -43,7 +43,7 @@ describe('listHotels', () => {
         await listHotels(mockReq, mockRes);
         jest.spyOn(Promise, 'all').mockImplementation(() => Promise.resolve(mockHotelData));
 
-        expect(mockRedisClient.smembers).toHaveBeenCalledWith(destination, expect.any(Function));
+        expect(mockRedisClient.smembers).toHaveBeenCalledWith(destinationId, expect.any(Function));
         expect(mockRedisClient.hget).toHaveBeenCalledTimes(2);
         expect(mockRes.json).toHaveBeenCalledWith(mockHotelData);
     });
