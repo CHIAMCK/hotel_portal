@@ -57,8 +57,6 @@ async function storeDataInRedis(redisClient, data) {
         if (count % batchSize !== 0) {
             await pipeline.exec()
         }
-
-        console.log("Data stored in Redis successfully")
     } catch (error) {
         console.error("Error storing data in Redis:", error)
     }
@@ -106,16 +104,6 @@ async function fetchDataAndMerge(redisClient) {
         const data = await fetchAllDataConcurrently()
         if (data) {
             const mergedData = mergeSources(data)
-            console.log("merged data !!!!")
-            console.log(mergedData)
-            console.log("hotel id", mergedData[0].id)
-            console.log("destinationImages", mergedData[0].images)
-
-            console.log("hotel id", mergedData[1].id)
-            console.log("destinationImages", mergedData[1].images)
-
-            console.log("hotel id", mergedData[2].id)
-            console.log("destinationImages", mergedData[2].images)
             await storeDataInRedis(redisClient, mergedData)
             return mergedData
         } else {

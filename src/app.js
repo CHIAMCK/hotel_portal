@@ -22,6 +22,8 @@ redisClient.on('connect', () => {
 });
 
 // get the latest data every 5 minutes
+// new data will be added to the cache
+// data that has been removed from dataset will expired after 30 minutes
 cron.schedule('*/5 * * * *', async () => {
     console.log('Running data fetching job...');
     await fetchDataAndMerge(redisClient);
