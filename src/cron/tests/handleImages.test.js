@@ -1,4 +1,4 @@
-const { handleImages } = require("../cron/dataProcess");
+const { handleImages } = require("../dataProcess");
 
 describe("handleImages function", () => {
     test("returns an empty object when both currentData and mergedData have no images", () => {

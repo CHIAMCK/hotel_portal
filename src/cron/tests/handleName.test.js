@@ -1,7 +1,7 @@
-const { handleName, removeSpecialCharacters } = require("../cron/dataProcess");
+const { handleName, removeSpecialCharacters } = require("../dataProcess");
 
-jest.mock("../cron/dataProcess", () => ({
-    ...jest.requireActual("../cron/dataProcess"),
+jest.mock("../dataProcess", () => ({
+    ...jest.requireActual("../dataProcess"),
     removeSpecialCharacters: jest.fn(),
 }));
 

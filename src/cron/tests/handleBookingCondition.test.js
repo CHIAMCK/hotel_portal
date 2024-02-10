@@ -1,4 +1,4 @@
-const { handleBookingCondition } = require("../cron/dataProcess")
+const { handleBookingCondition } = require("../dataProcess")
 
 describe("handleBookingCondition function", () => {
     test("returns an empty array when both booking conditions arrays are empty", () => {

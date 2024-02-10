@@ -1,7 +1,7 @@
 const express = require('express');
 const routes = require('./routes');
 const redis = require('ioredis');
-const fetchDataAndMerge = require('./cron/dataProcess');
+const { fetchDataAndMerge } = require('./cron/dataProcess');
 const cron = require('node-cron');
 
 const app = express();
@@ -21,6 +21,7 @@ redisClient.on('connect', () => {
     console.log('Connected to Redis');
 });
 
+// get the latest data every 5 minutes
 cron.schedule('*/5 * * * *', async () => {
     console.log('Running data fetching job...');
     await fetchDataAndMerge(redisClient);

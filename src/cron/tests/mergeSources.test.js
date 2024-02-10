@@ -1,7 +1,7 @@
-const { mergeSources } = require("../cron/dataProcess");
+const { mergeSources } = require("../dataProcess");
 
-jest.mock("../cron/dataProcess", () => ({
-  ...jest.requireActual("../cron/dataProcess"),
+jest.mock("../dataProcess", () => ({
+  ...jest.requireActual("../dataProcess"),
   handleID: jest.fn(),
   handleDestinationID: jest.fn(),
   handleName: jest.fn(),
@@ -12,7 +12,7 @@ jest.mock("../cron/dataProcess", () => ({
   handleBookingCondition: jest.fn(),
 }));
 
-const { handleID, handleDestinationID, handleName, handleLocation, handleDescription, handleAmenities, handleImages, handleBookingCondition } = require("../cron/dataProcess");
+const { handleID, handleDestinationID, handleName, handleLocation, handleDescription, handleAmenities, handleImages, handleBookingCondition } = require("../dataProcess");
 
 describe("mergeSources function", () => {
     test("returns an empty array when sources array is empty", () => {

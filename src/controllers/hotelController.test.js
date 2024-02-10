@@ -1,4 +1,4 @@
-const { listHotels, fetchHotelData } = require('../controllers/hotelController');
+const { listHotels } = require('./hotelController');
 
 const mockRedisClient = {
     smembers: jest.fn(),

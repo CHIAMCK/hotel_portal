@@ -1,4 +1,4 @@
-const { handleID } = require("../cron/dataProcess");
+const { handleID } = require("../dataProcess");
 
 describe("handleID function", () => {
     test("returns an empty string when both currentData and mergedData have no ID", () => {

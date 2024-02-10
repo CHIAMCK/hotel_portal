@@ -1,4 +1,4 @@
-const { handleDescription } = require("../cron/dataProcess");
+const { handleDescription } = require("../dataProcess");
 
 describe("handleDescription function", () => {
     it("should return currentData description when currentData has more words", () => {

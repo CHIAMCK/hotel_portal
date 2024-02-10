@@ -2,12 +2,12 @@
 const listHotels = async (req, res) => {
     const redisClient = req.app.get("redisClient") 
     try {
-        const { destination, hotelIds } = req.query
-        const promises = []
-        if (destination && destination.length > 0) {
+        const { destinationId, hotelIds } = req.query
+        let promises = []
+        if (destinationId && destinationId.length > 0) {
             // get all the hotel ids in that destination
             const hotelIds = await new Promise((resolve, reject) => {
-                redisClient.smembers(destination, (err, hotelIds) => {
+                redisClient.smembers(destinationId, (err, hotelIds) => {
                     if (err) {
                         reject(err)
                     } else {
@@ -17,7 +17,7 @@ const listHotels = async (req, res) => {
             })
 
             // get hotel data based on hotel ids from cache
-            promises = fetchHotelData(redisClient, hotels)
+            promises = fetchHotelData(redisClient, hotelIds)
         }
 
         if (hotelIds && hotelIds.length > 0) {
@@ -26,9 +26,10 @@ const listHotels = async (req, res) => {
             promises = fetchHotelData(redisClient, hotels)
         }
 
-        const hotelDataArray = await Promise.all(promises)
-        console.log("hotelDataArray", hotelDataArray)
-        res.json(hotelDataArray)
+        const hotelData = await Promise.all(promises)
+        console.log("hotelData", hotelData)
+        const filteredHotelData = hotelData.filter(data => data !== null);
+        res.json(filteredHotelData)
     } catch (e) {
         console.error("Error:", e)
         res.status(500).json({ error: "Internal server error" })
@@ -59,5 +60,6 @@ function fetchHotelData(redisClient, hotelIds) {
 }
 
 module.exports = {
-    listHotels
+    listHotels,
+    fetchHotelData
 }

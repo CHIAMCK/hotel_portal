@@ -1,4 +1,4 @@
-const { handleLocation } = require("../cron/dataProcess");
+const { handleLocation } = require("../dataProcess");
 
 describe("handleLocation function", () => {
     test("should return merged location with lat and lng from currentData if available", () => {

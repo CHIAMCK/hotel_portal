@@ -1,4 +1,4 @@
-const { handleAmenities } = require("../cron/dataProcess")
+const { handleAmenities } = require("../dataProcess")
 
 describe("handleAmenities function", () => {
     it("should return curentData amenities when it has more keys", () => {

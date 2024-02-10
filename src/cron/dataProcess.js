@@ -34,12 +34,10 @@ async function storeDataInRedis(redisClient, data) {
         // use pipeline to execute multiple commands in a single request
         const pipeline = redisClient.pipeline()
         let count = 0
-
         for (const hotel of data) {
             const destinationId = hotel.destination_id
             const hotelId = hotel.id
             const hotelJson = JSON.stringify(hotel)
-
             // group hotelId based on destination
             pipeline.sadd(destinationId, hotelId)
             pipeline.hmset(hotelId, "hotelData", hotelJson)
@@ -52,7 +50,7 @@ async function storeDataInRedis(redisClient, data) {
             // execute redis command in batches
             if (count % batchSize === 0) {
                 await pipeline.exec()
-                pipeline.clear() 
+                pipeline.clear()
             }
         }
 
@@ -69,7 +67,6 @@ async function storeDataInRedis(redisClient, data) {
 function mergeSources(sources) {
     // merge data and store it in a new object
     let mergedData = {}
-
     // loop all the data
     sources.forEach(source => {
         source.forEach(hotel => {
@@ -77,14 +74,13 @@ function mergeSources(sources) {
             const destinationId = hotel.destination || hotel.DestinationId || hotel.destination_id
             // generate unique key
             const commonKey = `${id}_${destinationId}`
-
             const commonData = {
                 id: handleID(hotel, mergedData[commonKey]),
                 destination_id: handleDestinationID(hotel, mergedData[commonKey]),
                 name: handleName(hotel, mergedData[commonKey]),
                 location: handleLocation(hotel, mergedData[commonKey]),
                 description: handleDescription(hotel, mergedData[commonKey]),
-                amenitites: handleAmenities(hotel, mergedData[commonKey]),
+                amenities: handleAmenities(hotel, mergedData[commonKey]),
                 images: handleImages(hotel, mergedData[commonKey]),
                 booking_conditions: handleBookingCondition(hotel, mergedData[commonKey])
             }
@@ -111,7 +107,7 @@ async function fetchDataAndMerge(redisClient) {
         if (data) {
             const mergedData = mergeSources(data)
             console.log("merged data !!!!")
-            console.log(mergedData) // Merged data
+            console.log(mergedData)
             console.log("hotel id", mergedData[0].id)
             console.log("destinationImages", mergedData[0].images)
 
@@ -133,15 +129,11 @@ async function fetchDataAndMerge(redisClient) {
 }
 
 function handleID(currentData, mergedData) {
-    return (currentData?.id || currentData?.Id || currentData?.hotel_id || mergedData?.id || "")?.trim()
-}
-  
-function handleDestinationID(currentData, mergedData) {
-    return currentData?.destination || currentData?.DestinationId || currentData?.destination_id || mergedData?.destination_id
+    return (mergedData?.id || currentData?.id || currentData?.Id || currentData?.hotel_id || "")?.trim()
 }
 
-function removeSpecialCharacters(rawString) {
-    return rawString.replace(/[^\w\s]/gi, "")?.trim()
+function handleDestinationID(currentData, mergedData) {
+    return mergedData?.destination_id || currentData?.destination || currentData?.DestinationId || currentData?.destination_id || 0
 }
 
 function handleName(currentData, mergedData) {
@@ -153,18 +145,21 @@ function handleName(currentData, mergedData) {
 
 function handleLocation(currentData, mergedData) {
     const location1 = {
-        lat: currentData?.lat || currentData?.Latitude,
-        lng: currentData?.lng || currentData?.Longitude,
+        // parse lat, lng to float if it is string
+        lat: parseToFloatIfString(currentData?.lat || currentData?.Latitude || 0),
+        lng: parseToFloatIfString(currentData?.lng || currentData?.Longitude || 0),
         address: removeSpecialCharacters(currentData?.address || currentData?.Address || currentData?.location?.address || ""),
         city: removeSpecialCharacters(currentData?.city || currentData?.City || currentData?.location?.city || ""),
         country: removeSpecialCharacters(currentData?.country || currentData?.Country || currentData?.location?.country || "")
     }
 
-    // choose lat, lng that is available
+    const mergedLat = mergedData?.location?.lat || 0;
+    const mergedLng = mergedData?.location?.lng || 0;
+    // choose lat, lng with more decimal
     // choose longer address, city, country
     const mergedLocation = {
-        lat: parseIfString(location1.lat || mergedData?.location.lat),
-        lng: parseIfString(location1.lng || mergedData?.location.lng),
+        lat: (location1.lat.toString().length > mergedLat.toString().length) ? location1.lat : mergedData?.location?.lat || 0,
+        lng: (location1.lng.toString().length > mergedLng.toString().length) ? location1.lng : mergedData?.location?.lng || 0,
         address: location1.address.length > (mergedData?.location?.address || "").length ? location1.address : mergedData?.location?.address || "",
         city: location1.city.length > (mergedData?.location?.city || "").length ? location1.city : mergedData?.location?.city || "",
         country: location1.country.length > (mergedData?.location?.country || "").length ? location1.country : mergedData?.location?.country || ""
@@ -173,14 +168,13 @@ function handleLocation(currentData, mergedData) {
     return mergedLocation
 }
 
-const parseIfString = (value) => {
-    // If the value is a string, parse it to a floating-point number
-    if (typeof value === 'string') {
-        return parseFloat(value);
+const parseToFloatIfString = (value) => {
+    if (typeof value === "string") {
+        return parseFloat(value)
     }
-    return value;
-};
-  
+    return value
+}
+
 function handleDescription(currentData, mergedData) {
     const description1 = removeSpecialCharacters(currentData?.Description || "")
     const description2 = removeSpecialCharacters(mergedData?.description || "")
@@ -188,18 +182,18 @@ function handleDescription(currentData, mergedData) {
     return description1.split(" ").length > description2.split(" ").length ? description1 : description2
 }
 
-
 function handleAmenities(currentData, mergedData) {
-    const amenities1 = typeof currentData?.amenities === "object" && !Array.isArray(currentData?.amenities) ? currentData.amenities : (Array.isArray(currentData?.amenities) ? createAmenitiesObject(currentData.amenities) : null)
-    const amenities2 = mergedData?.amenities
+    const amenities1 = typeof currentData?.amenities === "object" && !Array.isArray(currentData?.amenities) ? currentData.amenities : (Array.isArray(currentData?.amenities) ? createAmenitiesObject(currentData.amenities) : {})
+    const amenities2 = mergedData?.amenities || {}
 
     const numKeys1 = amenities1 ? Object.keys(amenities1).length : 0
     const numKeys2 = amenities2 ? Object.keys(amenities2).length : 0
 
-    // choose amenities with more data
+    // choose amenities with more data (more keys)
     return numKeys1 > numKeys2 ? amenities1 : amenities2
 }
 
+// if array is provided, convert it into object, with general as key
 function createAmenitiesObject(amenitiesArray) {
     const amenitiesObject = {}
     amenitiesObject["general"] = amenitiesArray
@@ -229,21 +223,19 @@ function handleImages(currentData, mergedData) {
         for (let i = 0; i < sourceCategoryImages.length; i++) {
             const image = sourceCategoryImages[i]
             let foundDuplicate = false
-
             for (let j = 0; j < destCategoryImages.length; j++) {
                 const img = destCategoryImages[j]
-
                 if ((image.url && img.link === image.url) || (image.link && img.link === image.link)) {
                     foundDuplicate = true
                     break
                 }
             }
-            
+
             if (!foundDuplicate) {
                 // choose all the available images and remove duplicate image
                 destinationImages[category].push({
-                    "link": image?.url || image?.link,
-                    "description": image?.description || image?.caption
+                    "link": image?.url || image?.link || "",
+                    "description": image?.description || image?.caption || ""
                 })
             }
         }
@@ -252,4 +244,22 @@ function handleImages(currentData, mergedData) {
     return destinationImages
 }
 
-module.exports = fetchDataAndMerge
+function removeSpecialCharacters(rawString) {
+    return rawString.replace(/[^\w\s,.:#'()-\/]/gi, "").trim();
+}
+
+module.exports = {
+    handleName,
+    removeSpecialCharacters,
+    handleLocation,
+    handleDescription,
+    handleAmenities,
+    handleBookingCondition,
+    handleImages,
+    handleID,
+    mergeSources,
+    handleDestinationID,
+    storeDataInRedis,
+    fetchAllDataConcurrently,
+    fetchDataAndMerge
+};

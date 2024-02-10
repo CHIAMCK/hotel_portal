@@ -1,4 +1,4 @@
-const { fetchDataAndMerge } = require("../cron/dataProcess");
+const { fetchDataAndMerge } = require("../dataProcess");
 
 const mockData = [{ id: 1, images: ['image1.jpg', 'image2.jpg'] }];
 const mockMergedData = [{ id: 1, images: ['image1.jpg', 'image2.jpg'] }];
@@ -7,7 +7,7 @@ const fetchAllDataConcurrently = jest.fn(() => Promise.resolve(mockData));
 const mergeSources = jest.fn(() => mockMergedData);
 const storeDataInRedis = jest.fn();
 
-jest.mock('../cron/dataProcess', () => ({
+jest.mock('../dataProcess', () => ({
   fetchDataAndMerge: jest.fn(),
 }));
 
@@ -34,7 +34,6 @@ describe('fetchDataAndMerge', () => {
       storeDataInRedis
     });
 
-    // Assertions
     expect(result).toEqual(mockMergedData);
     expect(fetchAllDataConcurrently).toHaveBeenCalled();
     expect(mergeSources).toHaveBeenCalledWith(mockData);
