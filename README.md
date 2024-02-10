@@ -17,10 +17,12 @@
 ## Get hotel data
 
 1. List hotels by destination id
-http://localhost:3000/v1/hotels?destinationId=1122
+
+   http://localhost:3000/v1/hotels?destinationId=1122
 
 2. List hotels by hotel ids
-http://localhost:3000/v1/hotels?hotelIds=iJhz,SjyX,f8c9
+
+   http://localhost:3000/v1/hotels?hotelIds=iJhz,SjyX,f8c9
 
 ## Build hotel data
 
