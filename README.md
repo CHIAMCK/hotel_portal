@@ -27,6 +27,8 @@
 ## Build hotel data
 
 1. There is a cron job that every 5 minutes to collect the latest data and store it in cache.
+2. New data added to the dataset will be added to the cache.
+2. Data that has been removed from dataset will expired after 30 minutes
 
 
 ## Testing
