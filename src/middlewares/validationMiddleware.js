@@ -1,10 +1,10 @@
-const { query, validationResult } = require('express-validator');
+const { query, validationResult } = require("express-validator");
 
 const validateParams = [
-  query('destinationId').optional().isInt().withMessage('Destination ID must be an integer'),
-  query('hotelIds').optional().custom(value => {
-    if (typeof value !== 'string') {
-      throw new Error('Hotel IDs must be a string');
+  query("destinationId").optional().isInt().withMessage("Destination ID must be an integer"),
+  query("hotelIds").optional().custom(value => {
+    if (typeof value !== "string") {
+      throw new Error("Hotel IDs must be a string");
     }
     return true;
   }),

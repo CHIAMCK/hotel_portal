@@ -1,22 +1,22 @@
 const { fetchDataAndMerge } = require("../dataProcess");
 
-const mockData = [{ id: 1, images: ['image1.jpg', 'image2.jpg'] }];
-const mockMergedData = [{ id: 1, images: ['image1.jpg', 'image2.jpg'] }];
+const mockData = [{ id: 1, images: ["image1.jpg", "image2.jpg"] }];
+const mockMergedData = [{ id: 1, images: ["image1.jpg", "image2.jpg"] }];
 
 const fetchAllDataConcurrently = jest.fn(() => Promise.resolve(mockData));
 const mergeSources = jest.fn(() => mockMergedData);
 const storeDataInRedis = jest.fn();
 
-jest.mock('../dataProcess', () => ({
+jest.mock("../dataProcess", () => ({
   fetchDataAndMerge: jest.fn(),
 }));
 
-describe('fetchDataAndMerge', () => {
+describe("fetchDataAndMerge", () => {
   afterEach(() => {
     jest.clearAllMocks();
   });
 
-  test('should fetch and merge data successfully', async () => {
+  test("should fetch and merge data successfully", async () => {
     fetchDataAndMerge.mockImplementationOnce(async ({ fetchAllDataConcurrently, mergeSources, storeDataInRedis }) => {
       const data = await fetchAllDataConcurrently();
       if (data) {
